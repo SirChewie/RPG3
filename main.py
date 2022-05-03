@@ -1,5 +1,7 @@
+import math
 import pygame
 import sys
+
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -9,7 +11,11 @@ class Character:
     def __init__(self):
         self.x = 0
         self.y = 0
-        self.speed = 2
+        self.sth = 1
+        self.itl = 1
+        self.dex = 1
+        self.atk_speed = math.ceil(1 + (self.dex * .2))
+        self.walk_speed = 2
         # Damage resist
         self.res = .01
         # Attack
@@ -31,6 +37,9 @@ class Character:
 class Player(Character):
     def __init__(self):
         super(Player, self).__init__()
+        self.can_move = True
+        self.x = 100
+        self.y = 300
         self.left_pressed = False
         self.right_pressed = False
         self.up_pressed = False
@@ -59,16 +68,17 @@ class Player(Character):
             if self.facing_right:
                 self.surf = pygame.transform.flip(self.surf, True, False)
                 self.facing_right = False
-            self.velX = -self.speed
+            self.velX = -self.walk_speed
         if self.right_pressed and not self.left_pressed:
             if not self.facing_right:
                 self.surf = pygame.transform.flip(self.surf, True, False)
+
                 self.facing_right = True
-            self.velX = self.speed
+            self.velX = self.walk_speed
         if self.up_pressed and not self.down_pressed:
-            self.velY = -self.speed
+            self.velY = -self.walk_speed
         if self.down_pressed and not self.up_pressed:
-            self.velY = self.speed
+            self.velY = self.walk_speed
 
         self.x += self.velX
         self.y += self.velY
@@ -78,6 +88,15 @@ class Player(Character):
 class Enemy(Character):
     def __init__(self):
         super(Enemy, self).__init__()
+        self.x = 800
+        self.y = 300
+        self.surf = pygame.transform.scale(pygame.image.load('imgs/Fisher Man 1 right.png').convert_alpha(),
+                                           (screenx * .025, screeny * .08))
+        self.rect = self.surf.get_rect(midbottom=(self.x, self.y))
+
+    def draw(self, s):
+        """Draws the object on the given screen"""
+        s.blit(self.surf, self.rect)
 
 
 class Ui:
@@ -131,56 +150,12 @@ screen = pygame.display.set_mode((960, 540))
 screenx, screeny = screen.get_size()
 
 player = Player()
+print(player.walk_speed)
+enemy = Enemy()
 ui = Ui()
 # Keeps the script running.
 while __name__ == '__main__':
     # main loop
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            exit()
-
-        # Movement
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_a:
-                player.left_pressed = True
-            if event.key == pygame.K_d:
-                player.right_pressed = True
-            if event.key == pygame.K_w:
-                player.up_pressed = True
-            if event.key == pygame.K_s:
-                player.down_pressed = True
-            if event.key == pygame.K_SPACE:
-                player.space_pressed = True
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_a:
-                player.left_pressed = False
-            if event.key == pygame.K_d:
-                player.right_pressed = False
-            if event.key == pygame.K_w:
-                player.up_pressed = False
-            if event.key == pygame.K_s:
-                player.down_pressed = False
-            if event.key == pygame.K_SPACE:
-                player.space_pressed = False
-
-        # Mouse Controls
-        player.mouse_pos = pygame.mouse.get_pos()
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                player.mouseL_pressed = True
-            if event.button == 2:
-                player.mouseM_pressed = True
-            if event.button == 3:
-                player.mouseR_pressed = True
-
-        if event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 1:
-                player.mouseL_pressed = False
-            if event.button == 2:
-                player.mouseM_pressed = False
-            if event.button == 3:
-                player.mouseR_pressed = False
 
     # event listeners
     for event in pygame.event.get():
@@ -188,29 +163,31 @@ while __name__ == '__main__':
             pygame.quit()
             sys.exit()
 
-        # Movement
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_a:
-                player.left_pressed = True
-            if event.key == pygame.K_d:
-                player.right_pressed = True
-            if event.key == pygame.K_w:
-                player.up_pressed = True
-            if event.key == pygame.K_s:
-                player.down_pressed = True
-            if event.key == pygame.K_SPACE:
-                player.space_pressed = True
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_a:
-                player.left_pressed = False
-            if event.key == pygame.K_d:
-                player.right_pressed = False
-            if event.key == pygame.K_w:
-                player.up_pressed = False
-            if event.key == pygame.K_s:
-                player.down_pressed = False
-            if event.key == pygame.K_SPACE:
-                player.space_pressed = False
+        # Can the player move?
+        if player.can_move:
+            # Movement
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_a:
+                    player.left_pressed = True
+                if event.key == pygame.K_d:
+                    player.right_pressed = True
+                if event.key == pygame.K_w:
+                    player.up_pressed = True
+                if event.key == pygame.K_s:
+                    player.down_pressed = True
+                if event.key == pygame.K_SPACE:
+                    player.space_pressed = True
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_a:
+                    player.left_pressed = False
+                if event.key == pygame.K_d:
+                    player.right_pressed = False
+                if event.key == pygame.K_w:
+                    player.up_pressed = False
+                if event.key == pygame.K_s:
+                    player.down_pressed = False
+                if event.key == pygame.K_SPACE:
+                    player.space_pressed = False
 
         # Mouse Controls
         player.mouse_pos = pygame.mouse.get_pos()
@@ -230,6 +207,7 @@ while __name__ == '__main__':
             if event.button == 3:
                 player.mouseR_pressed = False
 
+    enemy.draw(screen)
     player.draw(screen)
     ui.draw(screen)
     player.update()
